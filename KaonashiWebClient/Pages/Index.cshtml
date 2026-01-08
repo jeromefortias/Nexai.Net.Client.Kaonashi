@@ -1,0 +1,156 @@
+﻿@page
+@model Localhost.AI.KaonashiWeb.Pages.IndexModel
+@{
+    ViewData["Title"] = "Kaonashi - AI Chat Assistant";
+}
+
+<div class="container-fluid h-100">
+    <div class="row h-100">
+        <!-- Main Chat Area -->
+        <div class="col-md-9 d-flex flex-column h-100">
+            <div class="card flex-grow-1 d-flex flex-column">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Kaonashi AI Assistant</h5>
+                        <div>
+                            <span class="badge @(Model.IsConnected ? "bg-success" : "bg-danger")">
+                                @(Model.IsConnected ? "Connected" : "Disconnected")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body flex-grow-1 overflow-auto" id="chatDisplay" style="min-height: 400px;">
+                    <div class="alert alert-info">
+                        <strong>Welcome to Kaonashi!</strong> Start a conversation by typing a message below.
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="input-group">
+                        <select class="form-select" id="modelSelector" style="max-width: 200px;">
+                            @foreach (var modelItem in Model.AvailableModels)
+                            {
+                                var isSelected = modelItem == Model.Config.LastModelUsed || modelItem == Model.Config.DefaultModel;
+                                <option value="@modelItem" selected="@(isSelected ? "selected" : null)">@modelItem</option>
+                            }
+                        </select>
+                        <input type="text" class="form-control" id="messageInput" placeholder="Type your message here..." />
+                        <button class="btn btn-primary" id="sendButton" type="button">Send</button>
+                        <button class="btn btn-secondary" id="clearButton" type="button">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Settings</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">System Prompt</label>
+                        <textarea class="form-control" id="systemPrompt" rows="3">@Model.Config.SystemPrompt</textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="hideThinkTags" @(Model.Config.HideThinkTags ? "checked" : "")>
+                        <label class="form-check-label" for="hideThinkTags">
+                            Hide Think Tags
+                        </label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="/Settings" class="btn btn-outline-primary btn-sm">Settings</a>
+                        <a href="/News" class="btn btn-outline-info btn-sm">News</a>
+                        <a href="/Entities" class="btn btn-outline-secondary btn-sm">Entities</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let chatHistory = [];
+
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+        document.getElementById('clearButton').addEventListener('click', clearChat);
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const model = document.getElementById('modelSelector').value;
+            const systemPrompt = document.getElementById('systemPrompt').value;
+
+            // Add user message to display
+            addMessageToDisplay('user', message);
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: model,
+                        systemPrompt: systemPrompt
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessageToDisplay('assistant', data.response);
+                } else {
+                    addMessageToDisplay('system', 'Error: Failed to get response from AI');
+                }
+            } catch (error) {
+                addMessageToDisplay('system', 'Error: ' + error.message);
+            } finally {
+                input.disabled = false;
+                document.getElementById('sendButton').disabled = false;
+                input.focus();
+            }
+        }
+
+        function addMessageToDisplay(role, content) {
+            const chatDisplay = document.getElementById('chatDisplay');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `mb-3 ${role === 'user' ? 'text-end' : role === 'assistant' ? 'text-start' : 'text-center'}`;
+            
+            const card = document.createElement('div');
+            card.className = `card d-inline-block ${role === 'user' ? 'bg-primary text-white' : role === 'assistant' ? 'bg-light' : 'bg-warning'}`;
+            card.style.maxWidth = '80%';
+            
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            cardBody.innerHTML = `<strong>${role === 'user' ? 'You' : role === 'assistant' ? 'Kaonashi' : 'System'}:</strong><br>${escapeHtml(content)}`;
+            
+            card.appendChild(cardBody);
+            messageDiv.appendChild(card);
+            chatDisplay.appendChild(messageDiv);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }
+
+        function clearChat() {
+            document.getElementById('chatDisplay').innerHTML = '<div class="alert alert-info"><strong>Chat cleared.</strong> Start a new conversation.</div>';
+            chatHistory = [];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+}
