@@ -1,6 +1,6 @@
 # 🏮 Kaonashi
 
-**Kaonashi** is an **open-source Windows client** for the [Localhost.ai](https://github.com/nexai-net/Localhost.ai) platform 💻  
+**Kaonashi** is an **open-source Windows client** for the [Nexai.net](https://github.com/jeromefortias/Nexai.Net) platform 💻  
 It is developed in **WinForms (.NET Core 8.0)** and designed to provide a lightweight, local interface for interacting with on-device AI models ⚙️
 
 ---
