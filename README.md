@@ -64,10 +64,9 @@ If you wish to participate:
 
 ## 📬 Useful Links
 
-- 🔗 [Localhost.ai on GitHub](https://github.com/nexai-net/Localhost.ai)
+- 🔗 [Nexai.net server on GitHub](https://github.com/jeromefortias/Nexai.Net)
 - 🧭 [Le Lab IA – YouTube Channel](https://www.youtube.com/@lelabia)
-- 🌍 [Community Website – lelabduvieuxgeek.com](https://lelabduvieuxgeek.com)
-- [Article on Nexai.net](https://www.nexai.net/2025/10/localhostai-update-du-14-octobre-2025.html)
+
 
 ---
 
